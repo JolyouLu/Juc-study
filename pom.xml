@@ -15,6 +15,7 @@
     <modules>
         <module>Juc-Executor</module>
         <module>Juc-JMMLockTools</module>
+        <module>Juc-Atominc</module>
     </modules>
 
 
