@@ -28,6 +28,7 @@ public class ThreadPoolExecutor implements Executor {
     //队列
     private BlockingQueue<Runnable> workQueue;
 
+    //初始线程池
     public ThreadPoolExecutor(int corePollSize, int maximumPoolSize, BlockingQueue<Runnable> workQueue) {
         this.corePollSize = corePollSize;
         this.maximumPoolSize = maximumPoolSize;
@@ -46,7 +47,7 @@ public class ThreadPoolExecutor implements Executor {
     }
 
     /**
-     * 接收 task任务
+     * 暴露接口 接收 task任务
      * @param command
      */
     @Override
@@ -55,12 +56,12 @@ public class ThreadPoolExecutor implements Executor {
             throw new NullPointerException();
         }
         int c = ctl.get();
-        if (c < corePollSize){
-            addWorker(command,true);
-        }else if (workQueue.offer(command)){
-            addWorker(null,false);
+        if (c < corePollSize){ //判断是不是小于核心
+            addWorker(command,true); //把任务添加到核心容量
+        }else if (workQueue.offer(command)){ //如果核心满了 添加到队列中 成功true 失败flash
+            addWorker(null,false); //传空
         }else {
-            reject(command);
+            reject(command); //如果队列也满了 使用拒绝策略
         }
 
     }
@@ -70,8 +71,8 @@ public class ThreadPoolExecutor implements Executor {
         if(core){//如果true，表示使用核心容量，计数加1
             ctl.incrementAndGet();
         }
-        Worker worker = new Worker(task);
-        worker.thread.start();
+        Worker worker = new Worker(task);//传入task任务
+        worker.thread.start();//调run方法
     }
 
     //拒绝策略 方法
@@ -87,6 +88,7 @@ public class ThreadPoolExecutor implements Executor {
         private Runnable firstTask;
         private Thread thread;
 
+        //初始任务
         public Worker(Runnable firstTask) {
             this.firstTask = firstTask;
             thread = new Thread(this);
@@ -94,23 +96,26 @@ public class ThreadPoolExecutor implements Executor {
 
         @Override
         public void run() {
-            runWork(this);
+            runWork(this);//调用具体的执行
         }
 
         //具体的执行任务方法
         private void runWork(Worker w) {
+            //上锁
             try {
                 w.lock();
                 Runnable task = w.firstTask;
+                //判断task 如果不为空，或者去队列取task 不为空
                 if (task!=null || (task=getTask())!= null){
-                    task.run();
+                    task.run(); //执行run方法
                 }
-                task.run();
             }finally {
+                processWorkerExit(w); //执行完重复使用
                 w.unlock();
             }
         }
 
+        //往worker传null 达到重复使用效果
         private void processWorkerExit(Worker w){
             addWorker(null,false);
         }
