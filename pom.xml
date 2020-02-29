@@ -16,6 +16,9 @@
         <module>Juc-Executor</module>
         <module>Juc-JMMLockTools</module>
         <module>Juc-Atominc</module>
+        <module>Juc-scheduledExecutor</module>
+        <module>Juc-ForkJoinTask</module>
+        <module>Juc-MyExecutor</module>
     </modules>
 
 
